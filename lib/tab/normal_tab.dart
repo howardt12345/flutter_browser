@@ -76,14 +76,14 @@ class _NormalTabState extends State<NormalTab> {
       if(_rect == null) {
         _rect = _buildRect(context, appBar, bottomNavigationBar, persistentFooterButtons);
         _webviewPlugin.launch(widget.uri.toString(),
-            withJavascript: widget.withJavascript,
-            clearCache: widget.clearCache,
-            clearCookies: widget.clearCookies,
-            enableAppScheme: widget.enableAppScheme,
-            userAgent: widget.userAgent,
-            rect: _rect,
-            withZoom: widget.withZoom,
-            withLocalStorage: widget.withLocalStorage);
+          withJavascript: widget.withJavascript,
+          clearCache: widget.clearCache,
+          clearCookies: widget.clearCookies,
+          enableAppScheme: widget.enableAppScheme,
+          userAgent: widget.userAgent,
+          rect: _rect,
+          withZoom: widget.withZoom,
+          withLocalStorage: widget.withLocalStorage);
       } else {
         Rect rect = _buildRect(context, appBar, bottomNavigationBar, persistentFooterButtons);
         if (_rect != rect) {
@@ -100,7 +100,6 @@ class _NormalTabState extends State<NormalTab> {
         appBar: buildAppBar(),
         persistentFooterButtons: persistentFooterButtons,
         bottomNavigationBar: bottomNavigationBar,
-        floatingActionButton: buildFloatingActionButton(),
       );
     }
     else return buildHomePage();
@@ -109,10 +108,28 @@ class _NormalTabState extends State<NormalTab> {
   Widget buildHomePage() {
     return new Scaffold(
       appBar: buildAppBar(),
-      body: new Center(
-        child: new Text("Home"),
+      body: new CustomScrollView(
+        slivers: <Widget>[
+          new SliverGrid(
+            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount (
+              mainAxisSpacing: 10.0,
+              crossAxisSpacing: 10.0,
+              crossAxisCount: 4,
+              childAspectRatio: 1.0,
+            ),
+            delegate: new SliverChildBuilderDelegate(
+                  (BuildContext context, int index) {
+                return new Container(
+                  alignment: Alignment.center,
+                  color: Colors.teal[100 * (index % 9)],
+                  child: new Text('grid item $index'),
+                );
+              },
+              childCount: 8,
+            ),
+          ),
+        ]
       ),
-      floatingActionButton: buildFloatingActionButton(),
     );
   }
 
@@ -122,10 +139,7 @@ class _NormalTabState extends State<NormalTab> {
       titleSpacing: 0.0,
       leading: new IconButton(
           icon: new Icon(Icons.home),
-          onPressed: () {
-            setState(() => widget.uri = null);
-            refresh();
-          }
+          onPressed: home
       ),
       title: new TextField(
         maxLines: 1,
@@ -215,17 +229,22 @@ class _NormalTabState extends State<NormalTab> {
     if(text.isEmpty) {
       setState(() => widget.uri = null);
     } else {
-      print(await canLaunch(text.replaceAll(" ", "")));
+      print(await canLaunch("https://"+text.replaceAll(" ", "")));
       if(await canLaunch(text.replaceAll(" ", ""))) {
         setState(() {
           widget.uri = Uri.parse(text.replaceAll(" ", ""));
-          if(_rect != null) refresh();
         });
       } else {
         search(text);
       }
       _textController.text = widget.uri.toString();
     }
+    print(widget.uri.toString());
+  }
+
+  void home() {
+    setState(() => widget.uri = null);
+    _webviewPlugin.close();
   }
 
   void copy() async {
@@ -242,10 +261,27 @@ class _NormalTabState extends State<NormalTab> {
     }
   }
 
+  void relaunch() {
+    if(widget.uri != null) {
+      _webviewPlugin.close();
+      _webviewPlugin.launch(widget.uri.toString(),
+          withJavascript: widget.withJavascript,
+          clearCache: widget.clearCache,
+          clearCookies: widget.clearCookies,
+          enableAppScheme: widget.enableAppScheme,
+          userAgent: widget.userAgent,
+          rect: _rect,
+          withZoom: widget.withZoom,
+          withLocalStorage: widget.withLocalStorage);
+    }
+  }
+
   void search(String query) {
     setState(() =>
       widget.uri = Uri.parse("https://"+Settings.searchEngine+"/search?q="+query)
     );
+    if(_rect != null)
+      relaunch();
   }
 }
 
