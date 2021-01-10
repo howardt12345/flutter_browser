@@ -1,6 +1,6 @@
-# flutter_browser
+# Flutter Browser
 
-A new Flutter project.
+A basic browser made using Flutter, before Flutter officially had a WebView. 
 
 ## Getting Started
 
